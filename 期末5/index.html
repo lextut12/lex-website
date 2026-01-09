@@ -1,0 +1,307 @@
+index.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Platform Metrics Dashboard</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background: #f4f6f8;
+    margin: 30px;
+}
+
+h1, h2 {
+    color: #2c3e50;
+}
+
+.container {
+    max-width: 1200px;
+    margin: auto;
+}
+
+.card {
+    background: #fff;
+    padding: 20px;
+    margin: 15px 0;
+    border-radius: 6px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+
+.flex {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.metric {
+    flex: 1;
+    min-width: 200px;
+}
+
+.health {
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.green { color: #27ae60; }
+.yellow { color: #f39c12; }
+.red { color: #e74c3c; }
+
+.warning {
+    color: #e74c3c;
+    font-weight: bold;
+}
+
+select, input, button {
+    padding: 8px;
+    margin-top: 10px;
+}
+
+button {
+    background: #3498db;
+    border: none;
+    color: white;
+    cursor: pointer;
+}
+
+footer {
+    text-align: center;
+    margin-top: 40px;
+    color: #7f8c8d;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<h1>Platform Metrics & Health Dashboard</h1>
+
+<p>This dashboard demonstrates how platform metrics translate into business health.</p>
+
+<!-- PLATFORM SELECT -->
+<select id="platformSelect" onchange="updateDashboard()"></select>
+
+<!-- SUMMARY -->
+<div class="card flex" id="summary"></div>
+
+<!-- HEALTH -->
+<div class="card">
+<h2>Platform Health Score</h2>
+<div id="healthScore" class="health"></div>
+<div id="alerts"></div>
+</div>
+
+<!-- CHARTS -->
+<div class="card">
+<h2>User Activity Trends</h2>
+<canvas id="dauMauChart"></canvas>
+</div>
+
+<div class="card">
+<h2>Growth Rate Comparison (All Platforms)</h2>
+<canvas id="growthChart"></canvas>
+</div>
+
+<div class="card">
+<h2>Partner / Customer Balance</h2>
+<canvas id="balanceChart"></canvas>
+</div>
+
+<!-- SIMULATION -->
+<div class="card">
+<h2>User Growth Simulation</h2>
+<p>Add users to the current month:</p>
+<input type="number" id="addUsers" placeholder="Number of users">
+<button onclick="simulate()">Simulate Impact</button>
+</div>
+
+<!-- REPORT -->
+<div class="card">
+<h2>Executive Summary Report</h2>
+<p id="report"></p>
+</div>
+
+<footer>
+<p>Created by <strong>Lex</strong> | Student ID: <strong>689565439</strong></p>
+<p>Educational Use Only</p>
+</footer>
+
+</div>
+
+<script>
+// ================= DATA =================
+const data = {
+  platforms: [
+    {
+      name: "FoodFast",
+      data: generateData(150000)
+    },
+    {
+      name: "QuickEats",
+      data: generateData(120000)
+    },
+    {
+      name: "DeliverNow",
+      data: generateData(90000)
+    }
+  ]
+};
+
+function generateData(base) {
+    const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    return months.map((m,i)=>({
+        month: m + " 2024",
+        dau: Math.round(base*0.3 + i*2000),
+        mau: Math.round(base + i*5000),
+        customers: Math.round(base*0.8),
+        partners: Math.round(base/10),
+        revenue: Math.round(base*3 + i*20000)
+    }));
+}
+
+// ================= INIT =================
+const select = document.getElementById("platformSelect");
+data.platforms.forEach((p,i)=>{
+    select.innerHTML += `<option value="${i}">${p.name}</option>`;
+});
+
+let dauChart, growthChart, balanceChart;
+updateDashboard();
+
+// ================= METRICS =================
+function calculateHealth(metrics) {
+    const engagement = metrics.engagement;
+    const growth = metrics.growth;
+    const balance = metrics.balance;
+    const arpuGrowth = metrics.arpuGrowth;
+
+    return Math.round(
+        engagement*0.3 +
+        growth*0.3 +
+        balance*0.2 +
+        arpuGrowth*0.2
+    );
+}
+
+function updateDashboard(simulated=false) {
+    const p = data.platforms[select.value];
+    const d = p.data;
+    const current = d[d.length-1];
+    const prev = d[d.length-2];
+
+    const engagement = current.dau / current.mau * 100;
+    const growth = (current.mau - prev.mau) / prev.mau * 100;
+    const arpu = current.revenue / current.mau;
+    const prevArpu = prev.revenue / prev.mau;
+    const arpuGrowth = (arpu - prevArpu) / prevArpu * 100;
+    const balance = current.partners / current.customers * 100;
+
+    document.getElementById("summary").innerHTML = `
+        <div class="metric">DAU: ${current.dau}</div>
+        <div class="metric">MAU: ${current.mau}</div>
+        <div class="metric">Engagement: ${engagement.toFixed(1)}%</div>
+        <div class="metric">Growth: ${growth.toFixed(1)}%</div>
+        <div class="metric">ARPU: $${arpu.toFixed(2)}</div>
+        <div class="metric">Balance Ratio: ${(current.customers/current.partners).toFixed(1)} : 1</div>
+    `;
+
+    const health = calculateHealth({
+        engagement,
+        growth,
+        balance,
+        arpuGrowth
+    });
+
+    const color = health>70?"green":health>40?"yellow":"red";
+    document.getElementById("healthScore").innerHTML =
+        `<span class="${color}">${health} / 100</span>`;
+
+    showAlerts(engagement, balance, d);
+    drawCharts();
+    generateReport(p.name, current, engagement, growth);
+}
+
+// ================= ALERTS =================
+function showAlerts(engagement, balance, d) {
+    let alerts = "";
+    if (engagement < 30) alerts += "<p class='warning'>Low user engagement detected.</p>";
+    if (balance > 20 || balance < 5) alerts += "<p class='warning'>Supply-demand imbalance.</p>";
+    if (d[d.length-1].mau < d[d.length-2].mau &&
+        d[d.length-2].mau < d[d.length-3].mau)
+        alerts += "<p class='warning'>Two consecutive months of negative growth.</p>";
+
+    document.getElementById("alerts").innerHTML = alerts || "<p>No critical alerts.</p>";
+}
+
+// ================= CHARTS =================
+function drawCharts() {
+    const months = data.platforms[0].data.map(m=>m.month);
+
+    if (dauChart) dauChart.destroy();
+    if (growthChart) growthChart.destroy();
+    if (balanceChart) balanceChart.destroy();
+
+    dauChart = new Chart(document.getElementById("dauMauChart"), {
+        type: 'line',
+        data: {
+            labels: months,
+            datasets: data.platforms.map(p=>({
+                label: p.name + " DAU",
+                data: p.data.map(m=>m.dau)
+            }))
+        }
+    });
+
+    growthChart = new Chart(document.getElementById("growthChart"), {
+        type: 'line',
+        data: {
+            labels: months.slice(1),
+            datasets: data.platforms.map(p=>({
+                label: p.name,
+                data: p.data.slice(1).map((m,i)=>
+                    (m.mau - p.data[i].mau)/p.data[i].mau*100
+                )
+            }))
+        }
+    });
+
+    balanceChart = new Chart(document.getElementById("balanceChart"), {
+        type: 'bar',
+        data: {
+            labels: data.platforms.map(p=>p.name),
+            datasets: [{
+                label: "Customers per Partner",
+                data: data.platforms.map(p=>
+                    p.data.at(-1).customers / p.data.at(-1).partners
+                )
+            }]
+        }
+    });
+}
+
+// ================= SIMULATION =================
+function simulate() {
+    const add = Number(document.getElementById("addUsers").value);
+    if (!add) return;
+
+    const p = data.platforms[select.value];
+    p.data.at(-1).mau += add;
+    p.data.at(-1).dau += Math.round(add*0.3);
+    updateDashboard(true);
+}
+
+// ================= REPORT =================
+function generateReport(name, current, engagement, growth) {
+    document.getElementById("report").innerText =
+        `${name} has ${current.mau.toLocaleString()} monthly active users with an engagement rate of ${engagement.toFixed(1)}%. 
+The customer-to-partner ratio is ${(current.customers/current.partners).toFixed(1)}:1. 
+Month-over-month growth rate: ${growth.toFixed(1)}%.`;
+}
+</script>
+</body>
+</html>

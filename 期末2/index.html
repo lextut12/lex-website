@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Digital Economy Evolution Timeline (1947–2025)</title>
+
+    <style>
+        /* ===== Global ===== */
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: #0b1c2d;
+            color: #ffffff;
+        }
+
+        h1 {
+            text-align: center;
+            padding: 30px 10px 10px;
+        }
+
+        p.subtitle {
+            text-align: center;
+            color: #cfd8dc;
+            margin-bottom: 40px;
+        }
+
+        /* ===== Timeline Container ===== */
+        .timeline {
+            max-width: 1000px;
+            margin: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        /* ===== Timeline Item ===== */
+        .event {
+            border-left: 6px solid;
+            padding: 15px 20px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.2s;
+        }
+
+        .event:hover {
+            transform: translateX(5px);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .event h3 {
+            margin: 0;
+        }
+
+        .event span.year {
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .details {
+            display: none;
+            margin-top: 10px;
+            color: #e0f7fa;
+        }
+
+        /* ===== Era Colors ===== */
+        .foundation {
+            border-color: #607d8b;
+        }
+
+        .transition {
+            border-color: #ff9800;
+        }
+
+        .digital {
+            border-color: #4caf50;
+        }
+
+        .modern {
+            border-color: #00e5ff;
+        }
+
+        /* ===== Footer ===== */
+        footer {
+            text-align: center;
+            padding: 30px;
+            font-size: 0.9rem;
+            color: #b0bec5;
+        }
+
+        /* ===== Responsive ===== */
+        @media (max-width: 600px) {
+            .event {
+                font-size: 0.95rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<h1>Evolution of the Digital Economy (1947–2025)</h1>
+<p class="subtitle">
+    An interactive timeline showing how technological innovation accumulates over time.
+</p>
+
+<div class="timeline" id="timeline"></div>
+
+<footer>
+    Created by <strong>Lex</strong><br>
+    Student ID: <strong>689565439</strong>
+</footer>
+
+<script>
+    /* ===== Timeline Data (20 Milestones) ===== */
+    const timelineData = [
+        { year: 1947, title: "Transistor", era: "foundation",
+            description: "Electronic switch enabling modern computing.",
+            impact: "Made computers smaller, faster, and cheaper." },
+
+        { year: 1958, title: "Integrated Circuit", era: "foundation",
+            description: "Multiple transistors on one chip.",
+            impact: "Accelerated hardware miniaturization." },
+
+        { year: 1969, title: "ARPANET", era: "foundation",
+            description: "Early packet-switching network.",
+            impact: "Foundation of the Internet." },
+
+        { year: 1971, title: "Microprocessor", era: "foundation",
+            description: "A computer on a single chip.",
+            impact: "Enabled personal computing." },
+
+        { year: 1981, title: "Personal Computer", era: "transition",
+            description: "Computers enter homes and offices.",
+            impact: "Mass access to computing power." },
+
+        { year: 1991, title: "World Wide Web", era: "transition",
+            description: "Public access to the Internet.",
+            impact: "Global information sharing." },
+
+        { year: 1998, title: "Search Engines", era: "transition",
+            description: "Efficient information retrieval.",
+            impact: "Reshaped knowledge access." },
+
+        { year: 2004, title: "Social Media", era: "transition",
+            description: "Online social platforms emerge.",
+            impact: "Digital social interaction." },
+
+        { year: 2007, title: "Smartphone", era: "digital",
+            description: "Mobile computing revolution.",
+            impact: "Always-connected digital life." },
+
+        { year: 2009, title: "Cloud Computing", era: "digital",
+            description: "On-demand computing resources.",
+            impact: "Lowered startup and scaling costs." },
+
+        { year: 2012, title: "Big Data", era: "digital",
+            description: "Massive data analytics.",
+            impact: "Data-driven decision making." },
+
+        { year: 2014, title: "Sharing Economy", era: "digital",
+            description: "Platform-based services.",
+            impact: "Redefined ownership models." },
+
+        { year: 2016, title: "Artificial Intelligence Boom", era: "digital",
+            description: "Deep learning breakthroughs.",
+            impact: "Automation and prediction." },
+
+        { year: 2018, title: "Blockchain", era: "digital",
+            description: "Decentralized ledgers.",
+            impact: "Trust without intermediaries." },
+
+        { year: 2020, title: "Remote Work Tech", era: "modern",
+            description: "Digital collaboration tools.",
+            impact: "Globalized digital workforce." },
+
+        { year: 2021, title: "Metaverse Concept", era: "modern",
+            description: "Persistent virtual worlds.",
+            impact: "New digital economies." },
+
+        { year: 2022, title: "Generative AI", era: "modern",
+            description: "AI creating content.",
+            impact: "Redefined creativity and work." },
+
+        { year: 2023, title: "AI Assistants", era: "modern",
+            description: "Human-AI collaboration tools.",
+            impact: "Productivity acceleration." },
+
+        { year: 2024, title: "AI Personalization", era: "modern",
+            description: "Highly customized services.",
+            impact: "Individual-centered digital economy." },
+
+        { year: 2025, title: "Autonomous Digital Systems", era: "modern",
+            description: "Self-operating AI systems.",
+            impact: "Next stage of digital transformation." }
+    ];
+
+    /* ===== Render Timeline ===== */
+    const timeline = document.getElementById("timeline");
+
+    timelineData.forEach(item => {
+        const event = document.createElement("div");
+        event.className = `event ${item.era}`;
+
+        event.innerHTML = `
+            <h3>
+                <span class="year">${item.year}</span>
+                ${item.title}
+            </h3>
+            <div class="details">
+                <p><strong>Description:</strong> ${item.description}</p>
+                <p><strong>Impact:</strong> ${item.impact}</p>
+            </div>
+        `;
+
+        event.addEventListener("click", () => {
+            const details = event.querySelector(".details");
+            details.style.display =
+                details.style.display === "block" ? "none" : "block";
+        });
+
+        timeline.appendChild(event);
+    });
+</script>
+
+</body>
+</html>

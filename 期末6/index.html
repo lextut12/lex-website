@@ -1,0 +1,188 @@
+index.html
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="Technology Adoption Intelligence Platform - S-curve diffusion model visualization and forecasting." />
+<meta charset="UTF-8" />
+<title>Technology Adoption Intelligence Platform</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+:root {
+    --bg: #020617;
+    --panel: #020617;
+    --border: #1e293b;
+    --text: #e5e7eb;
+    --muted: #94a3b8;
+    --accent: #38bdf8;
+}
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    padding: 40px;
+    background: radial-gradient(circle at top, #020617, #000);
+    font-family: "Inter", "Segoe UI", Arial, sans-serif;
+    color: var(--text);
+}
+
+h1 { font-size: 32px; margin-bottom: 10px; }
+h2 { font-size: 18px; margin-bottom: 15px; }
+
+p { color: var(--muted); max-width: 900px; }
+
+.container { max-width: 1400px; margin: auto; }
+
+.panel {
+    background: linear-gradient(180deg, #020617, #000);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 26px;
+    margin-bottom: 28px;
+    box-shadow: 0 30px 80px rgba(0,0,0,.6);
+}
+
+.controls { display: grid; grid-template-columns: repeat(auto-fit,minmax(240px,1fr)); gap: 22px; }
+
+label { font-size: 13px; color: var(--muted); }
+
+select, input { margin-top: 6px; width: 100%; padding: 10px; background: #000; border: 1px solid var(--border); border-radius: 8px; color: var(--text); }
+
+input[type=range] { padding: 0; }
+
+.range { font-size: 12px; color: var(--accent); margin-top: 4px; }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(200px,1fr)); gap: 20px; }
+
+.metric { padding: 18px; border: 1px solid var(--border); border-radius: 10px; background: #000; }
+
+.metric span { display: block; font-size: 26px; color: var(--accent); margin-top: 6px; }
+
+canvas { width: 100% !important; height: 420px !important; }
+
+footer { text-align: center; margin-top: 60px; color: #64748b; font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="container">
+<h1>Technology Adoption Intelligence Platform</h1>
+<p>Advanced visualization and forecasting of technology adoption using S-curve diffusion models.</p>
+
+<!-- CONTROLS -->
+<div class="panel controls">
+    <div>
+        <label>Compare Technologies (max 3)</label>
+        <select id="techSelect" multiple>
+            <option value="Artificial Intelligence" selected>Artificial Intelligence</option>
+            <option value="Blockchain" selected>Blockchain</option>
+            <option value="Internet of Things">Internet of Things</option>
+            <option value="Virtual Reality">Virtual Reality</option>
+            <option value="5G Networks">5G Networks</option>
+        </select>
+    </div>
+    <div>
+        <label>Initial Adoption Rate (%)</label>
+        <input type="number" id="initialRate" min="1" max="40" value="15">
+    </div>
+    <div>
+        <label>Growth Rate</label>
+        <input type="range" id="growthRate" min="0.15" max="0.9" step="0.05" value="0.45">
+        <div class="range">k = <span id="kVal">0.45</span></div>
+    </div>
+    <div>
+        <label>Inflection Point (Years)</label>
+        <input type="range" id="inflection" min="6" max="18" step="1" value="10">
+        <div class="range">t₀ = <span id="t0Val">10</span></div>
+    </div>
+</div>
+
+<!-- METRICS -->
+<div class="panel">
+<h2>Adoption Milestone Forecast</h2>
+<div class="grid" id="milestones"></div>
+</div>
+
+<!-- CHART -->
+<div class="panel">
+<h2>S-Curve Adoption Projection</h2>
+<canvas id="chart"></canvas>
+</div>
+
+<footer>
+<p>Created by <strong>Lex</strong> · Student ID <strong>689565439</strong></p>
+<p>Final Project · Educational Use Only</p>
+</footer>
+</div>
+
+<script>
+const ctx = document.getElementById("chart");
+let chart;
+const COLORS = ["#38bdf8", "#a78bfa", "#22c55e"];
+
+function logistic(t, k, t0, start) {
+    return start + (100 - start) / (1 + Math.exp(-k * (t - t0)));
+}
+
+function generateSeries(k, t0, start) {
+    return Array.from({ length: 31 }, (_, t) => logistic(t, k, t0, start));
+}
+
+function calculateMilestones(k, t0, start) {
+    const targets = [25, 50, 75, 90];
+    return targets.map(target => {
+        let t = 0;
+        while (logistic(t, k, t0, start) < target) t += 0.1;
+        return t.toFixed(1);
+    });
+}
+
+function update() {
+    const selected = [...document.getElementById("techSelect").selectedOptions].map(o => o.value).slice(0, 3);
+    if (selected.length === 0) return;
+
+    const k = +document.getElementById("growthRate").value;
+    const t0 = +document.getElementById("inflection").value;
+    const start = +document.getElementById("initialRate").value;
+
+    document.getElementById("kVal").innerText = k.toFixed(2);
+    document.getElementById("t0Val").innerText = t0;
+
+    const labels = Array.from({ length: 31 }, (_, i) => `Year ${i}`);
+    const datasets = selected.map((tech, i) => ({
+        label: tech,
+        data: generateSeries(k + i * 0.05, t0 + i, start),
+        borderColor: COLORS[i],
+        backgroundColor: COLORS[i],
+        borderWidth: 3,
+        tension: 0.45,
+        pointRadius: 0
+    }));
+
+    if (chart) chart.destroy();
+    chart = new Chart(ctx, {
+        type: "line",
+        data: { labels, datasets },
+        options: {
+            responsive: true,
+            plugins: { legend: { labels: { color: "#e5e7eb" } } },
+            scales: {
+                x: { ticks: { color: "#94a3b8" } },
+                y: { min: 0, max: 100, ticks: { color: "#94a3b8" }, title: { display: true, text: "Adoption (%)", color: "#94a3b8" } }
+            }
+        }
+    });
+
+    const m = calculateMilestones(k, t0, start);
+    document.getElementById("milestones").innerHTML = `
+        <div class="metric">25% Adoption<span>${m[0]} yrs</span></div>
+        <div class="metric">50% Adoption<span>${m[1]} yrs</span></div>
+        <div class="metric">75% Adoption<span>${m[2]} yrs</span></div>
+        <div class="metric">90% Adoption<span>${m[3]} yrs</span></div>
+    `;
+}
+
+update();
+["techSelect", "growthRate", "inflection", "initialRate"].forEach(id => 
+    document.getElementById(id).addEventListener("input", update)
+);
+</script>
+</body>
+</html>

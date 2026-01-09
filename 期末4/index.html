@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Web Security Vulnerability Education Tool</title>
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background: #f5f7fa;
+        margin: 40px;
+        line-height: 1.6;
+    }
+
+    h1, h2, h3 {
+        color: #2c3e50;
+    }
+
+    .container {
+        max-width: 1100px;
+        margin: auto;
+    }
+
+    .box {
+        padding: 20px;
+        margin-bottom: 25px;
+        border-radius: 6px;
+        background: #ffffff;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+
+    .vulnerable {
+        border-left: 6px solid #e74c3c;
+    }
+
+    .secure {
+        border-left: 6px solid #2ecc71;
+    }
+
+    .warning {
+        color: #e67e22;
+        font-weight: bold;
+    }
+
+    .danger {
+        color: #e74c3c;
+        font-weight: bold;
+    }
+
+    .safe {
+        color: #2ecc71;
+        font-weight: bold;
+    }
+
+    input, textarea, button {
+        width: 100%;
+        padding: 10px;
+        margin: 8px 0;
+        box-sizing: border-box;
+    }
+
+    button {
+        background: #3498db;
+        border: none;
+        color: white;
+        cursor: pointer;
+    }
+
+    button:hover {
+        background: #2980b9;
+    }
+
+    .severity {
+        padding: 6px 10px;
+        border-radius: 4px;
+        color: white;
+        display: inline-block;
+        margin-top: 5px;
+    }
+
+    .severity.high { background: #e74c3c; }
+    .severity.medium { background: #f1c40f; color: #000; }
+    .severity.low { background: #2ecc71; }
+
+    pre {
+        background: #2d3436;
+        color: #ecf0f1;
+        padding: 15px;
+        overflow-x: auto;
+        border-radius: 4px;
+    }
+
+    .score {
+        font-size: 28px;
+        font-weight: bold;
+    }
+
+    footer {
+        text-align: center;
+        margin-top: 40px;
+        color: #7f8c8d;
+        font-size: 14px;
+    }
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<h1>Web Security Vulnerability Demonstration Platform</h1>
+<p><strong>Purpose:</strong> Understand how common web vulnerabilities work and why security is a business-critical priority.</p>
+
+<!-- ===================== PHASE 1 ===================== -->
+<div class="box vulnerable">
+<h2>Phase 1: Vulnerable Login / Comment Form</h2>
+
+<p>This form is intentionally insecure:</p>
+<ul>
+    <li>No input validation</li>
+    <li>User input is directly displayed (XSS risk)</li>
+    <li>Password stored in plain text (demo only)</li>
+    <li>No authentication logic</li>
+</ul>
+
+<input type="text" id="username" placeholder="Username">
+<input type="password" id="password" placeholder="Password">
+<textarea id="comment" placeholder="Leave a comment"></textarea>
+
+<button onclick="scan()">Scan for Vulnerabilities</button>
+
+<h3>Displayed User Comment (Unsafe)</h3>
+<div id="output"></div>
+</div>
+
+<!-- ===================== PHASE 2 ===================== -->
+<div class="box">
+<h2>Phase 2: Vulnerability Scanner Results</h2>
+<div id="results"></div>
+</div>
+
+<!-- ===================== EXPLANATIONS ===================== -->
+<div class="box">
+<h2>Vulnerability Explanations</h2>
+
+<h3>1. SQL Injection</h3>
+<p>Occurs when user input is directly embedded into SQL queries.</p>
+<p class="danger">Danger: Attackers can bypass authentication or destroy data.</p>
+
+<h3>2. Cross-Site Scripting (XSS)</h3>
+<p>Malicious scripts are injected and executed in the victim's browser.</p>
+<p class="danger">Danger: Session hijacking, phishing, malware delivery.</p>
+
+<h3>3. Weak Passwords</h3>
+<p>Short or simple passwords are easy to brute-force.</p>
+<p class="warning">Danger: Account compromise.</p>
+
+<h3>4. Plain Text Password Storage</h3>
+<p>Passwords stored without hashing can be instantly exposed.</p>
+<p class="danger">Danger: Massive data breaches.</p>
+</div>
+
+<!-- ===================== CODE COMPARISON ===================== -->
+<div class="box">
+<h2>Code Comparison: Vulnerable vs Secure</h2>
+
+<h3>❌ Vulnerable SQL Code</h3>
+<pre>SELECT * FROM users 
+WHERE username = '" + username + "' 
+AND password = '" + password + "';</pre>
+
+<h3>✅ Secure SQL Code (Parameterized Query)</h3>
+<pre>SELECT * FROM users 
+WHERE username = ? AND password = ?;</pre>
+
+<h3>❌ Vulnerable Output</h3>
+<pre>document.getElementById("output").innerHTML = userInput;</pre>
+
+<h3>✅ Secure Output</h3>
+<pre>document.getElementById("output").textContent = userInput;</pre>
+</div>
+
+<!-- ===================== TEST CASES ===================== -->
+<div class="box">
+<h2>Malicious Input Test Cases</h2>
+<ul>
+    <li><code>' OR 1=1 --</code></li>
+    <li><code>&lt;script&gt;alert('XSS')&lt;/script&gt;</code></li>
+    <li><code>password123</code></li>
+</ul>
+</div>
+
+<!-- ===================== BEST PRACTICES ===================== -->
+<div class="box secure">
+<h2>Security Best Practices Checklist</h2>
+<ul>
+    <li>✔ Validate and sanitize all user input</li>
+    <li>✔ Use parameterized queries</li>
+    <li>✔ Encode output properly</li>
+    <li>✔ Hash passwords using bcrypt or Argon2</li>
+    <li>✔ Enforce strong password policies</li>
+    <li>✔ Use HTTPS and encryption</li>
+</ul>
+</div>
+
+<footer>
+<p>Created by <strong>Lex</strong> | Student ID: <strong>689565439</strong></p>
+<p>Educational Use Only</p>
+</footer>
+
+</div>
+
+<script>
+function checkSQLInjection(input) {
+    const patterns = ["'", "--", ";", "DROP", "OR 1=1"];
+    return patterns.some(p => input.toUpperCase().includes(p));
+}
+
+function checkXSS(input) {
+    const patterns = ["<script>", "onerror=", "javascript:"];
+    return patterns.some(p => input.toLowerCase().includes(p));
+}
+
+function checkPasswordStrength(password) {
+    return {
+        length: password.length >= 8,
+        hasNumber: /\d/.test(password),
+        hasSpecial: /[!@#$%^&*]/.test(password)
+    };
+}
+
+function scan() {
+    const username = document.getElementById("username").value;
+    const password = document.getElementById("password").value;
+    const comment = document.getElementById("comment").value;
+
+    document.getElementById("output").textContent = comment;
+
+    let score = 100;
+    let results = "";
+
+    if (checkSQLInjection(username) || checkSQLInjection(comment)) {
+        results += `<p class="danger">SQL Injection detected <span class="severity high">HIGH</span></p>`;
+        score -= 30;
+    }
+
+    if (checkXSS(comment)) {
+        results += `<p class="danger">XSS risk detected <span class="severity high">HIGH</span></p>`;
+        score -= 30;
+    }
+
+    const pwd = checkPasswordStrength(password);
+    if (!pwd.length || !pwd.hasNumber || !pwd.hasSpecial) {
+        results += `<p class="warning">Weak password <span class="severity medium">MEDIUM</span></p>`;
+        score -= 20;
+    }
+
+    results += `<p class="score">Overall Security Score: ${score}/100</p>`;
+
+    document.getElementById("results").innerHTML = results;
+}
+</script>
+
+</body>
+</html>

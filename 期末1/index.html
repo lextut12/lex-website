@@ -1,0 +1,231 @@
+index.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>elio | AI Travel Guide Store</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Arial, sans-serif;
+            background: linear-gradient(180deg, #0a3d62, #1e90ff);
+            color: #ffd700;
+            text-align: center;
+        }
+
+        header {
+            padding: 70px 20px;
+        }
+
+        h1 {
+            font-size: 3rem;
+            letter-spacing: 2px;
+        }
+
+        h2 {
+            font-weight: 300;
+            color: #fff6b0;
+        }
+
+        section {
+            max-width: 900px;
+            margin: 40px auto;
+            background: rgba(255, 255, 255, 0.12);
+            border-radius: 18px;
+            padding: 30px;
+            backdrop-filter: blur(8px);
+        }
+
+        p {
+            color: #fffde7;
+            line-height: 1.7;
+        }
+
+        input, textarea, button {
+            padding: 12px;
+            border-radius: 8px;
+            border: none;
+            font-size: 1rem;
+            margin: 5px;
+        }
+
+        input {
+            width: 250px;
+        }
+
+        textarea {
+            width: 80%;
+            height: 90px;
+        }
+
+        button {
+            background: #ffd700;
+            color: #0a3d62;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #fff59d;
+        }
+
+        img {
+            max-width: 100%;
+            border-radius: 16px;
+            margin-top: 20px;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        li {
+            background: rgba(255,255,255,0.2);
+            margin: 12px;
+            padding: 12px;
+            border-radius: 10px;
+            color: #fffde7;
+            text-align: left;
+        }
+
+        footer {
+            padding: 40px;
+            color: #e0f7fa;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>elio</h1>
+    <h2>AI-Customized Travel Guide Store</h2>
+    <p>Create sunny, personalized travel inspiration with AI ☀️</p>
+    <div id="countdown"></div>
+</header>
+
+<!-- User System -->
+<section>
+    <h2>👤 User Account</h2>
+    <p id="userStatus">You are not logged in.</p>
+
+    <input type="text" id="username" placeholder="Choose a username" />
+    <button onclick="registerUser()">Register / Login</button>
+</section>
+
+<!-- Travel Search -->
+<section>
+    <h2>🌍 Search a Destination</h2>
+    <input type="text" id="place" placeholder="e.g. Rome, Bali, Kyoto" />
+    <button onclick="searchPlace()">Search</button>
+
+    <h3 id="placeTitle"></h3>
+    <img id="placeImg" />
+</section>
+
+<!-- Comments -->
+<section>
+    <h2>💬 Community Board</h2>
+    <p>Only registered users can comment.</p>
+
+    <textarea id="comment" placeholder="Share your travel thoughts..."></textarea><br>
+    <button onclick="addComment()">Post Comment</button>
+
+    <ul id="commentList"></ul>
+</section>
+
+<footer>
+    © 2026 elio — AI Travel for a Brighter World ☀️<br><br>
+    Created by <strong>Lex</strong><br>
+    Student ID: <strong>689565439</strong>
+</footer>
+
+<script>
+    /* Countdown */
+    const launchDate = new Date("2026-06-06");
+    function updateCountdown() {
+        const diff = launchDate - new Date();
+        if (diff <= 0) {
+            countdown.innerText = "🎉 We are live!";
+            return;
+        }
+        countdown.innerText =
+            `Launching in ${Math.floor(diff / 86400000)} days`;
+    }
+    setInterval(updateCountdown, 1000);
+    updateCountdown();
+
+    /* User System */
+    const userStatus = document.getElementById("userStatus");
+    let currentUser = localStorage.getItem("elioUser");
+
+    function updateUserUI() {
+        if (currentUser) {
+            userStatus.innerText = `Welcome back, ${currentUser}!`;
+        }
+    }
+
+    function registerUser() {
+        const name = document.getElementById("username").value;
+        if (!name) return;
+        localStorage.setItem("elioUser", name);
+        currentUser = name;
+        updateUserUI();
+    }
+
+    updateUserUI();
+
+    /* Search */
+    function searchPlace() {
+        const place = document.getElementById("place").value;
+        if (!place) return;
+        placeTitle.innerText = `AI Travel Inspiration: ${place}`;
+        placeImg.src =
+            `https://source.unsplash.com/900x500/?${place},travel`;
+    }
+
+    /* Comments with username */
+    const commentList = document.getElementById("commentList");
+
+    function loadComments() {
+        const saved = JSON.parse(localStorage.getItem("elioComments")) || [];
+        saved.forEach(c => createComment(c));
+    }
+
+    function addComment() {
+        if (!currentUser) {
+            alert("Please register or login first.");
+            return;
+        }
+
+        const text = comment.value;
+        if (!text) return;
+
+        const data = {
+            user: currentUser,
+            time: new Date().toLocaleString(),
+            text: text
+        };
+
+        const saved = JSON.parse(localStorage.getItem("elioComments")) || [];
+        saved.push(data);
+        localStorage.setItem("elioComments", JSON.stringify(saved));
+
+        createComment(data);
+        comment.value = "";
+    }
+
+    function createComment(c) {
+        const li = document.createElement("li");
+        li.innerHTML =
+            `<strong>${c.user}</strong> · ${c.time}<br>${c.text}`;
+        commentList.appendChild(li);
+    }
+
+    loadComments();
+</script>
+
+</body>
+</html>
